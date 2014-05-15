@@ -2,7 +2,9 @@
 
 	var defaultOptions = {
 		type: 'detectLines',
-		gridColor: '#000000'
+		gridColor: '#000000',
+		gridPadding: 15,
+		drawTo: document.body
 	}
 
 	function ImageAnalyse() {
@@ -14,8 +16,8 @@
      */
 	_.extend(ImageAnalyse.prototype, Backbone.Events, {
 		initCanvas: function() {
-			var w = this.originalCanvas.width,
-				h = this.originalCanvas.height;
+			var w = this.originalCanvas.width + this.options.gridPadding,
+				h = this.originalCanvas.height + this.options.gridPadding;
 
 			this.originalContext = this.originalCanvas.getContext('2d');
 			
@@ -50,12 +52,13 @@
 		    contextToDraw.stroke();
 		},
 		invertCanvas: function() {
-			var width = this.originalCanvas.width,
-				height = this.originalCanvas.height,
+			var padding = this.options.gridPadding;
+			var width = this.pixelateCanvas.width
+				height = this.pixelateCanvas.height,
 				imgData = this.originalContext.getImageData(0, 0, width, height);
 			var data = imgData.data,
 				length = data.length; // 4 components - red, green, blue and alpha
-
+			
 			for(var i = 0; i < length; i += 4) {
 		      /*// red
 		      data[i] = 255 - data[i];
@@ -71,12 +74,12 @@
 		      // blue
 		      data[i + 2] = brightness;
 		    }
-		    this.pixelateContext.clearRect(0, 0, width, height);
-		    this.pixelateContext.putImageData(imgData, 0, 0);
+		    this.pixelateContext.clearRect(padding, padding, width, height);
+		    this.pixelateContext.putImageData(imgData, padding, padding);
 		    this.pixelateContext.drawImage(this.pixelateCanvas, 0, 0, width, height);
 		},
-		drawImage: function(drawTo) {
-			drawTo.appendChild(this.pixelateCanvas);
+		drawImage: function() {
+			this.options.drawTo.appendChild(this.pixelateCanvas);
 		}
 	});
 	/**
@@ -89,12 +92,12 @@
 				this.invertCanvas();
 				this.appendGrid();
 				this.processLines();
-				this.drawImage(document.body);
+				this.drawImage();
 			}
 		},
 		appendGrid: function() {
 			this.createGrid(this.pixelateContext, this.originalCanvas.width, 
-				this.originalCanvas.height, 10)
+				this.originalCanvas.height, this.options.gridPadding)
 		},
 		processLines: function() {
 

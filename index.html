@@ -2,12 +2,34 @@
 	<head>
 		<style type="text/css">
 			img {
-				width: 500px;
+				max-width: 400px;
+			}
+			.show-grid {
+				margin-bottom: 15px;
 			}
 		</style>
+		<link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
 	</head>
     <body>
-    	<img id="input" src="img1" />
+    	<div class="container" id="container">
+    		<div class="row show-grid">
+    			<div class="col-sm-6">
+					<img id="input1" src="img1" />
+    			</div>
+    			<div class="col-sm-6">
+    				<img id="input2" src="img2" />
+    			</div>
+    		</div>
+    		<div class="row show-grid">
+    			<div id="output1" class="col-sm-6">
+    			</div>
+    			<div id="output2" class="col-sm-6">
+    			</div>
+    		</div>
+    	</div>
+
+    	<script src = "bower_components/jquery/dist/jquery.min.js"></script>
+    	<script src = "bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     	<script src = "underscore.min.js"></script>
     	<script src = "backbone.min.js"></script>
         <script src = "custom.js"></script>
@@ -21,8 +43,14 @@
 				return canvas;
 			}
 			window.onload = function() {
-				var canvas = convertImageToCanvas(document.getElementById('input'))
-				imageAnalyse(canvas);
+				var canvas1 = convertImageToCanvas(document.getElementById('input1'))
+				imageAnalyse(canvas1, {
+					drawTo: document.getElementById('output1')
+				});
+				var canvas2 = convertImageToCanvas(document.getElementById('input2'))
+				imageAnalyse(canvas2, {
+					drawTo: document.getElementById('output2')
+				});
 			}
         </script>
     </body>
