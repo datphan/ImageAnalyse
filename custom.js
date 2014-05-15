@@ -4,6 +4,7 @@
 		type: 'detectLines',
 		gridColor: '#000000',
 		gridPadding: 15,
+		gridWidth: 20,
 		drawTo: document.body
 	}
 
@@ -35,51 +36,58 @@
 			return canvas;
 		},
 		createGrid: function(contextToDraw, w, h, padding) {
-			for (var x = 0; x <= w; x += 40) {
+			var gw = this.options.gridWidth,
+				grid = {};
+			for (var x = 0, i = 0; x <= w; x += gw, i++) {
 		        contextToDraw.moveTo(0.5 + x + padding, padding);
 		        contextToDraw.lineTo(0.5 + x + padding, h + padding);
-		        contextToDraw.fillText(x/40,x,8);
+		        contextToDraw.fillText(x/gw,x,8);
+		        grid[i] = [];
+		        grid[i].push(x);
 		    }
 
 
-		    for (var x = 0; x <= h; x += 40) {
+		    for (var x = 0, i = 0; x <= h; x += gw, i++) {
 		        contextToDraw.moveTo(padding, 0.5 + x + padding);
 		        contextToDraw.lineTo(w + padding, 0.5 + x + padding);
-		        contextToDraw.fillText(x/40,0,x + 7);
+		        contextToDraw.fillText(x/gw,0,x + 7);
+		        if (!grid[i]) {
+		        	grid[i] = [];
+		        	grid[i].push(0);
+		        } 
+		        grid[i].push(x);
 		    }
-
+		    this.grid = grid;
 		    contextToDraw.strokeStyle = this.options.gridColor;
 		    contextToDraw.stroke();
 		},
+
 		invertCanvas: function() {
 			var padding = this.options.gridPadding;
-			var width = this.pixelateCanvas.width
-				height = this.pixelateCanvas.height,
+			var width = this.gridCanvas.width
+				height = this.gridCanvas.height,
 				imgData = this.originalContext.getImageData(0, 0, width, height);
 			var data = imgData.data,
-				length = data.length; // 4 components - red, green, blue and alpha
-			
-			for(var i = 0; i < length; i += 4) {
-		      /*// red
-		      data[i] = 255 - data[i];
-		      // green
-		      data[i + 1] = 255 - data[i + 1];
-		      // blue
-		      data[i + 2] = 255 - data[i + 2];*/
-		      var brightness = 0.36 * data[i] + 0.76 * data[i + 1] + 0.16 * data[i + 2];
-		      // red
-		      data[i] = brightness;
-		      // green
-		      data[i + 1] = brightness;
-		      // blue
-		      data[i + 2] = brightness;
-		    }
-		    this.pixelateContext.clearRect(padding, padding, width, height);
-		    this.pixelateContext.putImageData(imgData, padding, padding);
-		    this.pixelateContext.drawImage(this.pixelateCanvas, 0, 0, width, height);
+				length = data.length;
+			function invert() {
+				for(var i = 0; i < length; i += 4) {
+			      var brightness = (0.59 * data[i] + 0.13 * data[i + 1] + 
+			      	0.79 * data[i + 2]) * 1;
+			      // red
+			      data[i] = brightness;
+			      // green
+			      data[i + 1] = brightness;
+			      // blue
+			      data[i + 2] = brightness;
+			    }
+			}
+			invert();
+		    this.gridContext.clearRect(padding, padding, width, height);
+		    this.gridContext.putImageData(imgData, padding, padding);
+		    this.gridContext.drawImage(this.gridCanvas, 0, 0, width, height);
 		},
 		drawImage: function() {
-			this.options.drawTo.appendChild(this.pixelateCanvas);
+			this.options.drawTo.appendChild(this.gridCanvas);
 		}
 	});
 	/**
@@ -96,11 +104,46 @@
 			}
 		},
 		appendGrid: function() {
-			this.createGrid(this.pixelateContext, this.originalCanvas.width, 
+			this.createGrid(this.gridContext, this.originalCanvas.width, 
 				this.originalCanvas.height, this.options.gridPadding)
 		},
 		processLines: function() {
+			var cols = Math.floor(this.originalCanvas.width/this.options.gridWidth),
+				rows = Math.floor(this.originalCanvas.height/this.options.gridWidth),
+				width = this.originalCanvas.width,
+				height = this.originalCanvas.height,
+				gw = this.options.gridWidth,
+				p = this.options.gridPadding,
+				imgData, data, length, x, y,
+				maxImg = 135,
+				minImg = 100;
+			function delect() {
+				for (var i = 2; i <= 12; i++) {
+			        for (var j = 12; j <= 13; j++) {
+			        	x = (i * gw + p);
+			        	y = (j * gw + p);
+			        	w = gw;
+			        	h = gw;
+			        	imgData = this.gridContext.getImageData(x, y, w, h);
 
+			        	data = imgData.data;
+						length = data.length;
+
+						for(var k = 0; k < length; k += 4) {
+					      if (data[k] < maxImg && data[k + 1] < maxImg 
+					      		&& data[k + 2] < maxImg &&
+					      		data[k] > 100 && data[k + 1] > 100 
+					      		&& data[k + 2] > 100) {
+					      	data[k] = 0;
+					      	data[k + 1] = 0;
+					      	data[k + 2] = 0;
+					      }
+					    }
+					    this.gridContext.putImageData(imgData, x, y);
+			    	}
+			    }
+			}
+			delect.call(this);
 		}
 	});
 
