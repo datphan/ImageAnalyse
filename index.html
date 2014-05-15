@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<style type="text/css">
+			img {
+				width: 500px;
+			}
+		</style>
+	</head>
+    <body>
+    	<img id="input" src="img1" />
+    	<script src = "underscore.min.js"></script>
+    	<script src = "backbone.min.js"></script>
+        <script src = "custom.js"></script>
+        <script>
+        	function convertImageToCanvas(image) {
+				var canvas = document.createElement("canvas");
+				canvas.width = image.width;
+				canvas.height = image.height;
+				canvas.getContext("2d").drawImage(image, 0, 0, image.width, image.height);
+
+				return canvas;
+			}
+			window.onload = function() {
+				var canvas = convertImageToCanvas(document.getElementById('input'))
+				imageAnalyse(canvas);
+			}
+        </script>
+    </body>
+</html>
